@@ -4,8 +4,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, Sp
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/airport/", include("airport.urls", namespace="airport")),
-    path("api/user/", include("user.urls", namespace="user")),
-
-    ),
+    path("book/", include("book.urls", namespace="book")),
+    path("borrowing/", include("borrowing.urls", namespace="borrowing")),
+    path("user/", include("user.urls", namespace="user"))
 ]
