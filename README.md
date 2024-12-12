@@ -1,50 +1,90 @@
-"# library-service-project" 
+# Library Service Project
+
+A Django-based web application for managing library borrowing, books, and users. The project supports integration with Stripe for payments, Telegram notifications, and has a robust test suite for reliable operations. The application is containerized using Docker for easy deployment.
+
+## Features
+
+		User Management: Supports user authentication and admin control.
+		Book Inventory: Manage books, including titles, authors, pricing, and inventory.
+		Borrowing System: Borrow books with expected return dates. Mark borrowed books as returned. Integration with Stripe for payment processing.
+		API Documentation: Auto-generated API documentation using DRF Spectacular.
+		Background Tasks: Celery tasks for async operations with Redis as the message broker.
+		Test Suite: Comprehensive tests for models, views, and serializers.
+
+## Tech Stack
+
+		Backend: Django, Django REST Framework (DRF)
+		Database: PostgreSQL
+		Messaging: Redis, Celery
+		Payments: Stripe
+		Containerization: Docker & Docker Compose
+
+## Installation
+
+### 1. Clone the repository
+
+```
+git clone https://github.com/Stekloduv/library-service-project.git
+```
 
 
-Requirements:
-Functional (what the system should do):
-Web-based
-Manage books inventory
-Manage books borrowing
-Manage customers
-Display notifications
-Handle payments
-Non-functional (what the system should deal with):
-5 concurrent users
-Up to 1000 books
-50k borrowings/year
-~30MB/year
+### 2. Set up environment variables
 
+Create a .env file in the root directory (env.sample to .env)
 
-Resources:
-Book:
-Title: str
-Author: str
-Cover: Enum: HARD | SOFT
-Inventory*: positive int
-Daily fee: decimal (in $USD)
+### 3. Build and run the Docker containers
 
-     * Inventory - the number of this specific book available for now in the library
+Ensure Docker is installed and running, then execute:
 
-User (Customer):
-Email: str
-First name: str
-Last name: str
-Password: str
-Is staff: bool
-Borrowing:
-Borrow date: date
-Expected return date: date
-Actual return date: date
-Book id: int
-User id: int
-Payment:
-Status: Enum: PENDING | PAID
-Type: Enum: PAYMENT | FINE
-Borrowing id: int
-Session url: Url  # url to stripe payment session
-Session id: str  # id of stripe payment session
-Money to pay: decimal (in $USD)  # calculated borrowing total price
+```
+docker-compose up --build
+```
 
+This will start:
+	•	Web: Django app
+	•	Database: PostgreSQL
+	•	Message Broker: Redis
 
-.venv\scripts\activate
+### 4. Apply migrations and create superuser
+
+Open a terminal in the running container:
+
+```
+docker-compose exec web python manage.py migrate
+docker-compose exec web python manage.py createsuperuser
+```
+
+### Access the application
+
+	•	Visit: http://localhost:8000
+	•	API Docs: http://localhost:8000/api/schema/swagger-ui/
+
+## Testing
+
+Run all tests with coverage:
+
+```
+docker-compose exec web coverage run manage.py test
+docker-compose exec web coverage report
+```
+
+## Usage
+
+### 1. Add Books
+
+Admins can add books to the inventory through the admin panel or API.
+
+### 2. Borrow Books
+
+	•	Users can borrow books and make payments through Stripe.
+	•	Notifications are sent via Telegram.
+
+### 3. Return Books
+
+Mark borrowed books as returned to update inventory.
+
+###  Endpoints:
+
+	•	Books: /books/
+	•	Borrowing: /borrowing/
+	•	Payments: /payments/
