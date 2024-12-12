@@ -1,11 +1,10 @@
-from django.shortcuts import render
 from django.utils.timezone import now
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.generics import get_object_or_404
 from rest_framework.response import Response
-
+from borrowing.tasks import notify_overdue_borrowings
 from borrowing.models import Borrowing
 from borrowing.serializers import (
     BorrowingSerializer,
@@ -13,6 +12,14 @@ from borrowing.serializers import (
     BorrowingListSerializer,
 )
 
+
+class IsAuthenticatedOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if view.action in ["list", "retrieve"]:
+            return request.user.is_authenticated
+        return request.user.is_authenticated and (
+            request.user.is_staff or request.user.is_superuser
+        )
 
 class BorrowingViewSet(viewsets.ModelViewSet):
     queryset = Borrowing.objects.all()
@@ -55,3 +62,15 @@ class BorrowingViewSet(viewsets.ModelViewSet):
         return Response(
             {"message": "Borrowing successfully returned."}, status=status.HTTP_200_OK
         )
+
+    @action(detail=False, methods=["post"], url_path="notify-overdue")
+    def notify_overdue(self, request):
+        """
+        Trigger the notification for overdue borrowings.
+        """
+        notify_overdue_borrowings.delay()  # Call the Celery task asynchronously
+        return Response(
+            {"message": "Notification for overdue borrowings has been triggered."},
+            status=status.HTTP_200_OK,
+        )
+
